@@ -243,6 +243,22 @@ canvas#certCanvas { width: 100%; border: 1px solid rgba(201,168,76,.3); display:
 .countdown-num { font-family: 'Cormorant Garamond', serif; font-size: 120px; color: var(--gold); animation: countPop .9s ease; }
 @keyframes countPop { from{transform:scale(1.4);opacity:0} to{transform:scale(1);opacity:1} }
 .countdown-text { font-size: 13px; letter-spacing: .3em; color: var(--text-muted); }
+
+/* ── スマホ対応 ── */
+@media (max-width: 600px) {
+  .container { padding: 24px 16px; }
+  header { padding: 36px 0 32px; }
+  .intro-card { padding: 28px 20px; }
+  .question-card { padding: 24px 18px; }
+  .question-text { font-size: 15px; }
+  .option-btn { font-size: 13px; padding: 14px 14px; }
+  .result-message { padding: 20px 18px; font-size: 14px; }
+  .result-iq { font-size: 56px; }
+  .nav-row { flex-direction: column-reverse; }
+  .nav-row .btn { width: 100%; text-align: center; }
+  #certificate-container { max-width: 100%; }
+  .toast { white-space: normal; text-align: center; max-width: 90vw; }
+}
 </style>
 </head>
 <body>
@@ -353,7 +369,7 @@ canvas#certCanvas { width: 100%; border: 1px solid rgba(201,168,76,.3); display:
 // ════════════════════════════════════════
 //  ★ Google Apps Script の WebApp URL をここに貼る
 // ════════════════════════════════════════
-const GAS_URL = "YOUR_GAS_WEBAPP_URL_HERE";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwM1bPhnGz9HXA1HPRoOTImt10BvZEct2sTT7IIMLCqPM_D_CimlACaXK5aRRykCxJc/exec";
 
 // ════════════════════════════════════════
 //  URL パラメータから X アカウント取得
@@ -587,6 +603,10 @@ async function showResult() {
       下記より合格証明書をダウンロードし、入会手続きにお役立てください。
     `;
     document.getElementById('certificate-container').style.display = 'block';
+    // スマホはボタンラベルを変更
+    const isMobile = /iP(hone|ad|od)|Android/i.test(navigator.userAgent);
+    document.querySelector('.cert-download-btn').textContent =
+      isMobile ? '合格証明書を保存する（画像を開く）↗' : '合格証明書をダウンロード ↓';
     drawCertificate(iq, correct);
   } else {
     document.getElementById('resultMessage').innerHTML = `
@@ -752,10 +772,58 @@ function drawCertificate(iq, correct) {
 
 function downloadCert() {
   const canvas = document.getElementById('certCanvas');
-  const link = document.createElement('a');
-  link.download = 'QII_Certificate.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+  const dataURL = canvas.toDataURL('image/png');
+
+  // iOS / Android 判定
+  const isIOS     = /iP(hone|ad|od)/i.test(navigator.userAgent);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isMobile  = isIOS || isAndroid;
+
+  if (isMobile) {
+    // スマホ：新しいタブで画像を開き、長押し保存を案内
+    const win = window.open('', '_blank');
+    if (!win) {
+      // ポップアップブロック時のフォールバック：同一ページに画像表示
+      showMobileCertFallback(dataURL);
+      return;
+    }
+    win.document.write(
+      '<!DOCTYPE html><html><head>' +
+      '<meta charset="UTF-8">' +
+      '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<title>QII 合格証明書</title>' +
+      '<style>' +
+      'body{margin:0;background:#0a0a0f;display:flex;flex-direction:column;' +
+      'align-items:center;justify-content:flex-start;min-height:100vh;gap:20px;padding:24px 16px;}' +
+      '.msg{color:#C9A84C;font-family:sans-serif;font-size:14px;letter-spacing:.05em;' +
+      'text-align:center;line-height:1.9;border:1px solid rgba(201,168,76,.3);' +
+      'padding:16px 20px;background:rgba(201,168,76,.06);}' +
+      'img{max-width:100%;border:1px solid rgba(201,168,76,.4);}' +
+      '</style></head><body>' +
+      '<div class="msg">📥 画像を長押し（または二本指タップ）して<br>「写真に追加」または「画像を保存」を選択してください</div>' +
+      '<img src="' + dataURL + '" alt="QII合格証明書">' +
+      '</body></html>'
+    );
+    win.document.close();
+  } else {
+    // PC：通常ダウンロード
+    const link = document.createElement('a');
+    link.download = 'QII_Certificate.png';
+    link.href = dataURL;
+    link.click();
+  }
+}
+
+// ポップアップブロック時のフォールバック（同一ページ内に画像を表示）
+function showMobileCertFallback(dataURL) {
+  const container = document.getElementById('certificate-container');
+  // すでにフォールバック表示済みなら何もしない
+  if (document.getElementById('cert-fallback-msg')) return;
+  const msg = document.createElement('p');
+  msg.id = 'cert-fallback-msg';
+  msg.style.cssText = 'color:#C9A84C;font-size:13px;line-height:1.8;text-align:center;margin-top:12px;padding:12px 16px;border:1px solid rgba(201,168,76,.3);background:rgba(201,168,76,.06);';
+  msg.innerHTML = '📥 上の画像を長押し（または二本指タップ）して<br>「写真に追加」または「画像を保存」を選択してください';
+  container.appendChild(msg);
 }
 
 function showScreen(id) {
