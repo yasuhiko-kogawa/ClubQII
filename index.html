@@ -244,6 +244,41 @@ canvas#certCanvas { width: 100%; border: 1px solid rgba(201,168,76,.3); display:
 @keyframes countPop { from{transform:scale(1.4);opacity:0} to{transform:scale(1);opacity:1} }
 .countdown-text { font-size: 13px; letter-spacing: .3em; color: var(--text-muted); }
 
+/* ── LINEボタン ── */
+.btn-line {
+  display: inline-block;
+  background: linear-gradient(135deg, #06C755 0%, #00A040 100%);
+  color: #fff;
+  border: none;
+  font-family: 'Noto Serif JP', serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  padding: 16px 40px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .25s ease;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+}
+.btn-line:hover { opacity: .88; transform: translateY(-1px); }
+
+/* ── 終了ボタン ── */
+.btn-end {
+  background: transparent;
+  border: 1px solid rgba(138,64,64,.5);
+  color: #8A6060;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  letter-spacing: .2em;
+  padding: 10px 28px;
+  cursor: pointer;
+  transition: all .25s ease;
+  text-transform: uppercase;
+}
+.btn-end:hover { border-color: #C47D7D; color: #C47D7D; }
+
 /* ── スマホ対応 ── */
 @media (max-width: 600px) {
   .container { padding: 24px 16px; }
@@ -358,8 +393,16 @@ canvas#certCanvas { width: 100%; border: 1px solid rgba(201,168,76,.3); display:
         <button class="btn btn-primary cert-download-btn" onclick="downloadCert()">合格証明書をダウンロード ↓</button>
       </div>
 
-      <div style="margin-top:24px">
+      <!-- 合格者向けLINEボタン（合格時のみ表示） -->
+      <div id="line-btn-wrap" style="display:none;margin-top:20px">
+        <a class="btn btn-line" href="https://lin.ee/PYFMZMY" target="_blank" rel="noopener">
+          ✅ 合格した方はこちら（LINE@へ）
+        </a>
+      </div>
+
+      <div style="margin-top:28px;display:flex;flex-direction:column;gap:12px;align-items:center">
         <button class="btn btn-outline" onclick="retake()">もう一度挑戦する</button>
+        <button class="btn btn-end" onclick="endTest()">終了する</button>
       </div>
     </div>
   </div>
@@ -603,6 +646,7 @@ async function showResult() {
       下記より合格証明書をダウンロードし、入会手続きにお役立てください。
     `;
     document.getElementById('certificate-container').style.display = 'block';
+    document.getElementById('line-btn-wrap').style.display = 'block';
     // スマホはボタンラベルを変更
     const isMobile = /iP(hone|ad|od)|Android/i.test(navigator.userAgent);
     document.querySelector('.cert-download-btn').textContent =
@@ -838,6 +882,16 @@ function retake() {
   testStartTime = null;
   showScreen('screen-intro');
 }
+
+function endTest() {
+  if (confirm('テストを終了してよろしいですか？')) {
+    // 画面全体を終了メッセージに置き換え（確実に終了状態にする）
+    document.open();
+    document.write('<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>テスト終了</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#0A0A0F;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:"Noto Serif JP",sans-serif;}@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300&family=Noto+Serif+JP:wght@300;400&display=swap");.wrap{text-align:center;padding:40px 24px;}.crest{width:60px;height:60px;margin:0 auto 24px;border:1.5px solid #C9A84C;display:flex;align-items:center;justify-content:center;font-size:22px;color:#C9A84C;transform:rotate(45deg);}.crest span{transform:rotate(-45deg);}h1{font-family:"Cormorant Garamond",serif;font-size:28px;font-weight:300;letter-spacing:.3em;color:#E8C97A;margin-bottom:16px;}p{font-size:14px;color:#8A8577;line-height:2;letter-spacing:.08em;}.rule{width:80px;height:1px;background:linear-gradient(90deg,transparent,#C9A84C,transparent);margin:20px auto;}</style></head><body><div class="wrap"><div class="crest"><span>♣</span></div><div class="rule"></div><h1>♣️QII 入会テスト</h1><div class="rule"></div><p>テストを終了しました。<br>ご受講ありがとうございました。</p></div></body></html>');
+    document.close();
+  }
+}
+
 </script>
 </body>
 </html>
